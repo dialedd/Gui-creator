@@ -1,0 +1,87 @@
+# made by _dialed
+# give cred
+
+# requirments:
+	# skript
+	# skbee
+	# reflect (for file storage)
+
+import:
+	java.io.FileWriter
+
+function create(p: player, r: integer=3, n: string="Chest", m: string="Metadata"):
+	set metadata tag "Create" of {_p} to chest inventory with {_r} rows named "Gui Creator"
+	open (metadata tag "Create" of {_p}) to {_p}
+	set {gui::%uuid of {_p}%::name} to {_n}
+	set {gui::%uuid of {_p}%::row} to {_r}
+	set {gui::%uuid of {_p}%::method} to {_m}
+	broadcast "%{gui::%uuid of {_p}%::name}%"
+	broadcast "%{gui::%uuid of {_p}%::row}%"
+	broadcast "%{gui::%uuid of {_p}%::method}%"
+
+function SaveCompound(p: player):
+	set {before} to unix timestamp of now
+	loop items in current inventory of {_p}:
+		if loop-item is not air:
+			set {_s} to index of loop-slot
+			set {_i} to full nbt of loop-slot
+			set tag "Slot" of {_i} to {_s}
+			add {_i} to {_i::*}
+	set {_n} to nbt from "{}"
+	set compound list tag "Gui" of {_n} to {_i::*}
+	set {gui::%uuid of {_p}%::compound} to {_n}
+	message "%{_n}%" to {_p}
+	convert({_p})
+
+function convert(p: player):
+	if {gui::%uuid of {_p}%::method} = "Metadata":
+		set {code::1} to "set metadata tag ""%{gui::%uuid of {_p}%::name}%"" of {_p} to chest inventory with %{gui::%uuid of {_p}%::row}% rows named ""%{gui::%uuid of {_p}%::name}%"""
+		set {code::method} to "metadata tag ""%{gui::%uuid of {_p}%::name}%"" of {_p}"
+		set {code::50} to "open (metadata tag ""%{gui::%uuid of {_p}%::name}%"" of {_p}) to {_p}"
+	else:
+		set {code::1} to "set {_g} to chest inventory with %{gui::%uuid of {_p}%::row}% rows named ""%{gui::%uuid of {_p}%::name}%"""
+		set {code::method} to "{_g}"
+		set {code::50} to "open {_g} to {_p}"
+	set {_i::*} to compound list tag "Gui" of {gui::%uuid of {_p}%::compound}
+	loop {_i::*}:
+		delete {_lore-1::*}
+		set {_slot} to int tag "Slot" of loop-value
+		set {_item} to nbt item from loop-value
+		set {_name} to "%name of {_item} ? type of {_item}%" # flag
+		set {_count} to int tag "Count" of loop-value
+		set {_lore::*} to (lore of {_item}) # flag
+		loop {_lore::*}:
+			add """%loop-value-2%""" to {_lore-1::*}
+		if {_lore::*} is set:
+			add "set slot %{_slot}% of %{code::method}% to %type of {_item}% named ""%{_name}%"" with lore %{_lore-1::*}%" to {code::*}
+		else:
+			add "set slot %{_slot}% of %{code::method}% to %{_count}% %type of {_item}% named ""%{_name}%""" to {code::*}
+	delete {code::method}
+	file({_p},{code::*})
+
+function file(p: player, c: objects):
+	set {_file} to new FileWriter("/home/container/gui.txt")
+	{_file}.write("function %{gui::%uuid of {_p}%::name}%(p: player):%nl%")
+	loop {_c::*}:
+		{_file}.append("	%loop-value%%nl%")
+	{_file}.close()
+	delete {gui::%uuid of {_p}%::*}
+	delete {code::*}
+	message "&aCode Succesfully Uploaded!" to {_p}
+	message "&aCheck The Gui.txt folder created at" to {_p}
+	message "&a/home/container/gui.txt" to {_p}
+	broadcast "Gui Generation: %(unix timestamp of now - {before}) * 1000%ms"
+	delete {before}
+
+on inventory close:
+	if {gui::%uuid of player%::name} is set:
+		SaveCompound(player)
+
+on tab complete of "/gui":
+	set tab completions for position 1 to 1,2,3,4,5,6
+	set tab completions for position 2 to "Name"
+	set tab completions for position 3 to "Metadata", "Local"
+
+command /gui <int> <string> <string>:
+	trigger:
+		create(player,arg-1,arg-2,arg-3)
