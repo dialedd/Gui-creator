@@ -15,9 +15,6 @@ function create(p: player, r: integer=3, n: string="Chest", m: string="Metadata"
 	set {gui::%uuid of {_p}%::name} to {_n}
 	set {gui::%uuid of {_p}%::row} to {_r}
 	set {gui::%uuid of {_p}%::method} to {_m}
-	broadcast "%{gui::%uuid of {_p}%::name}%"
-	broadcast "%{gui::%uuid of {_p}%::row}%"
-	broadcast "%{gui::%uuid of {_p}%::method}%"
 
 function SaveCompound(p: player):
 	set {before} to unix timestamp of now
@@ -30,7 +27,6 @@ function SaveCompound(p: player):
 	set {_n} to nbt from "{}"
 	set compound list tag "Gui" of {_n} to {_i::*}
 	set {gui::%uuid of {_p}%::compound} to {_n}
-	message "%{_n}%" to {_p}
 	convert({_p})
 
 function convert(p: player):
