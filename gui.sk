@@ -32,3 +32,8 @@ command /gui <int> <string> <string>:
 	trigger:
 		open (chest inventory with arg-1 rows named arg-2) to player
 		set {gui::%uuid of player%::method} to arg-3
+
+on tab complete of "/gui":
+	set tab completions for position 1 to 1,2,3,4,5,6
+	set tab completions for position 2 to "Name"
+	set tab completions for position 2 to "Metadata", "Local"
